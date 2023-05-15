@@ -12,9 +12,11 @@ const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
 // PID constants
-const float kP = 5;
-const float kI = 0.1;
-const float kD = 0.1;
+const float kP = 35;
+const float kI = 0;
+const float kD = 40;
+const float SPEED = 100;
+const float TURN_COEFF = 50;
 
 // PID variables
 float previousLinePosition = 0;
@@ -58,7 +60,7 @@ float getLinePosition(uint16_t inputSensorValues[]) {
     float linePosition = ((sumOfSensorsWeighted/sumOfSensors) - 4.5) / 3;
     return linePosition;
   } else {
-    return 0;
+    return -99;
   }
 }
 
@@ -115,7 +117,8 @@ void loop()
   ECE3_read_IR(sensorValues);
 
   float linePosition = getLinePosition(sensorValues);
-  Serial.println(linePosition);
+  if (linePosition == -99) linePosition = previousLinePosition;
+  //Serial.println(linePosition);
 
   float derivative = linePosition - previousLinePosition;
   float integral = integralLinePosition;
@@ -124,11 +127,11 @@ void loop()
   // implement PID controller
   float output = kP * proportional + kI * integral + kD * derivative;
   
-  setMotorSpeedLeft(20 - output);
-  setMotorSpeedRight(20 + output);
+  setMotorSpeedLeft(SPEED - output - TURN_COEFF*abs(linePosition));
+  setMotorSpeedRight(SPEED + output - TURN_COEFF*abs(linePosition));
 
   // update PID values
   previousLinePosition = linePosition;
   integralLinePosition += linePosition;
-  delay(50);
+  delay(10);
 }
