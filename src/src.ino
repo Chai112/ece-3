@@ -1,14 +1,8 @@
 #include <ECE3.h>
 
-uint16_t sensorValues[8];
-uint16_t offsetValues[8];
-char isInitialized = 0;
-float leftSpd = 0;
-float rightSpd = 0;
-
 const float SUM_OF_SENSORS_MIN = 0.3;
 
-// pins
+// pins constants
 const int left_nslp_pin = 31;
 const int left_dir_pin  = 29;
 const int left_pwm_pin  = 40;
@@ -17,9 +11,20 @@ const int right_nslp_pin = 11;
 const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
+// PID constants
 const float kP = 5;
 const float kI = 0.1;
 const float kD = 0.1;
+
+// PID variables
+float previousLinePosition = 0;
+float integralLinePosition = 0;
+
+uint16_t sensorValues[8];
+uint16_t offsetValues[8];
+char isInitialized = 0;
+float leftSpd = 0;
+float rightSpd = 0;
 
 // initialize/calibrate the white values
 void calibrateWhite() {
@@ -101,9 +106,6 @@ void setup()
   Serial.println("init completed");
   isInitialized = 1;
 }
-
-float previousLinePosition = 0;
-float integralLinePosition = 0;
 
 void loop()
 {
