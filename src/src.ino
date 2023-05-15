@@ -17,6 +17,10 @@ const int right_nslp_pin = 11;
 const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
+const float kP = 5;
+const float kI = 0.1;
+const float kD = 0.1;
+
 // initialize/calibrate the white values
 void calibrateWhite() {
   for (int i = 0; i < 20; i++) {
@@ -29,6 +33,7 @@ void calibrateWhite() {
 }
 
 // note: returns 0 if no line detected
+// left (+1)     0       right (-1)
 float getLinePosition(uint16_t inputSensorValues[]) {
   float sumOfSensors = 0;
   float sumOfSensorsWeighted = 0;
@@ -48,7 +53,7 @@ float getLinePosition(uint16_t inputSensorValues[]) {
     float linePosition = ((sumOfSensorsWeighted/sumOfSensors) - 4.5) / 3;
     return linePosition;
   } else {
-    return -999;
+    return 0;
   }
 }
 
@@ -71,21 +76,6 @@ void initPins() {
 
 }
 
-void setup()
-{
-  ECE3_Init();
-  Serial.begin(9600); // set the data rate in bits per second for serial data transmission
-
-  isInitialized = 0;
-  Serial.println("initializing");
-  // MAKE SURE VEHICLE IS ON A WHITE SURFACE WHEN INIT
-  //calibrateWhite(); initialize the white values
-  initPins();
-  
-  Serial.println("init completed");
-  isInitialized = 1;
-}
-
 void setMotorSpeedLeft(int speed) {
   analogWrite(left_pwm_pin, speed);
 }
@@ -94,16 +84,49 @@ void setMotorSpeedRight(int speed) {
   analogWrite(right_pwm_pin, speed);
 }
 
+void setup()
+{
+  ECE3_Init();
+  Serial.begin(9600); // set the data rate in bits per second for serial data transmission
+
+  isInitialized = 0;
+  Serial.println("initializing");
+  // MAKE SURE VEHICLE IS ON A WHITE SURFACE WHEN INIT
+  initPins(); // in
+  setMotorSpeedLeft(0);
+  setMotorSpeedRight(0);
+  calibrateWhite(); // initialize the white values
+  delay(2000);
+  
+  Serial.println("init completed");
+  isInitialized = 1;
+}
+
+float previousLinePosition = 0;
+float integralLinePosition = 0;
+
 void loop()
 {
   if (!isInitialized) return;
   
   // read raw sensor values
   ECE3_read_IR(sensorValues);
-  setMotorSpeedLeft(20);
-  setMotorSpeedRight(20);
 
   float linePosition = getLinePosition(sensorValues);
   Serial.println(linePosition);
+
+  float derivative = linePosition - previousLinePosition;
+  float integral = integralLinePosition;
+  float proportional = linePosition;
+
+  // implement PID controller
+  float output = kP * proportional + kI * integral + kD * derivative;
+  
+  setMotorSpeedLeft(20 - output);
+  setMotorSpeedRight(20 + output);
+
+  // update PID values
+  previousLinePosition = linePosition;
+  integralLinePosition += linePosition;
   delay(50);
 }
