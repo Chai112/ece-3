@@ -12,14 +12,15 @@ const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
 // PID constants
-const float kP = 35;
+const float kP = 20;
 const float kI = 0;
-const float kD = 40;
+const float kD = 20;
 const float SPEED = 100;
 const float TURN_COEFF = 50;
 
 // PID variables
-float previousLinePosition = 0;
+const int PREV_LINES = 3;
+float previousLinePositions[PREV_LINES];
 float integralLinePosition = 0;
 
 uint16_t sensorValues[8];
@@ -38,6 +39,7 @@ void calibrateWhite() {
     offsetValues[i] = sensorValues[i];
   }
 }
+
 
 // note: returns 0 if no line detected
 // left (+1)     0       right (-1)
@@ -109,6 +111,14 @@ void setup()
   isInitialized = 1;
 }
 
+float wheelSpdLeft;
+float wheelSpdRight;
+
+float clamp(float d, float min, float max) {
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
+}
+
 void loop()
 {
   if (!isInitialized) return;
@@ -117,21 +127,32 @@ void loop()
   ECE3_read_IR(sensorValues);
 
   float linePosition = getLinePosition(sensorValues);
-  if (linePosition == -99) linePosition = previousLinePosition;
+  if (linePosition == -99) linePosition = previousLinePositions[PREV_LINES - 1];
   //Serial.println(linePosition);
 
-  float derivative = linePosition - previousLinePosition;
+  float derivative = 0;
+  for (int i = 0; i < PREV_LINES; i++) {
+    derivative += previousLinePositions[i] / PREV_LINES;
+  }
   float integral = integralLinePosition;
   float proportional = linePosition;
 
   // implement PID controller
   float output = kP * proportional + kI * integral + kD * derivative;
-  
-  setMotorSpeedLeft(SPEED - output - TURN_COEFF*abs(linePosition));
-  setMotorSpeedRight(SPEED + output - TURN_COEFF*abs(linePosition));
+
+  float targetWheelSpdLeft = SPEED - output - TURN_COEFF*abs(linePosition);
+  float targetWheelSpdRight = SPEED + output - TURN_COEFF*abs(linePosition);
+
+  wheelSpdLeft += clamp(targetWheelSpdLeft - wheelSpdLeft, -20, 20);
+  wheelSpdRight += clamp(targetWheelSpdRight - wheelSpdRight, -20, 20);
+  setMotorSpeedLeft(wheelSpdLeft);
+  setMotorSpeedRight(wheelSpdRight);
 
   // update PID values
-  previousLinePosition = linePosition;
+  for (int i = 0; i < PREV_LINES - 1; i++) {
+    previousLinePositions[i] = previousLinePositions[i + 1];
+  }
+  previousLinePositions[PREV_LINES - 1] = linePosition;
   integralLinePosition += linePosition;
-  delay(10);
+  delay(30);
 }

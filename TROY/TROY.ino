@@ -1,22 +1,20 @@
 #include <ECE3.h>
 
-const float SUM_OF_SENSORS_MIN = 0.3;
-
 // pins constants
-const int left_nslp_pin = 31;
-const int left_dir_pin  = 29;
-const int left_pwm_pin  = 40;
+const int LEFT_NSLP_PIN = 31;
+const int LEFT_DIR_PIN  = 29;
+const int LEFT_PWM_PIN  = 40;
 
-const int right_nslp_pin = 11;
-const int right_dir_pin  = 30;
-const int right_pwm_pin  = 39;
+const int RIGHT_NSLP_PIN = 11;
+const int RIGHT_DIR_PIN  = 30;
+const int RIGHT_PWM_PIN  = 39;
 
 // PID constants
-const float kP = 35;
-const float kI = 0;
-const float kD = 40;
-const float SPEED = 100;
-const float TURN_COEFF = 50;
+const float KP = 20;
+const float KD = 40;
+const float KI = 0;
+const float BASE_SPEED = 100;
+const float TURN_SPEED = 50;
 
 // PID variables
 float previousLinePosition = 0;
