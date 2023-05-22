@@ -32,19 +32,19 @@ void setup()
   digitalWrite(LEFT_NSLP_PIN,HIGH);
   digitalWrite(RIGHT_NSLP_PIN,HIGH);
   
-  delay(2000);
+  delay(1000);
 }
 
 void loop()
 {
   ECE3_read_IR(sensorValues);
-  int pos = (sensorValues[0] * -8 +
-             sensorValues[1] * -4 +
-             sensorValues[2] * -2 +
-             sensorValues[3] * -1 +
-             sensorValues[4] * 1 +
-             sensorValues[5] * 2 +
-             sensorValues[6] * 4 +
-             sensorValues[7] * 8) * 0.0035;
+  int pos = ( (sensorValues[0] - 500) * (1000 / 1210) * -8 +
+              (sensorValues[1] - 500) * (1000 / 1234) * -8 +
+              (sensorValues[2] - 500) * (1000 / 1021) * -8 +
+              (sensorValues[3] - 500) * (1000 / 757) * -8 +
+              (sensorValues[4] - 500) * (1000 / 711) * -8 +
+              (sensorValues[5] - 500) * (1000 / 806) * -8 +
+              (sensorValues[6] - 500) * (1000 / 759) * -8 +
+              (sensorValues[7] - 500) * (1000 / 951) * -8 ) * 0.0035
   Serial.println(pos);
 }
