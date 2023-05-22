@@ -12,14 +12,14 @@ const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
 // PID constants
-const float kP = 20;
+const float kP = 0;
 const float kI = 0;
-const float kD = 20;
+const float kD = 50;
 const float SPEED = 100;
-const float TURN_COEFF = 50;
+const float TURN_COEFF = 30;
 
 // PID variables
-const int PREV_LINES = 3;
+const int PREV_LINES = 5;
 float previousLinePositions[PREV_LINES];
 float integralLinePosition = 0;
 
@@ -106,6 +106,9 @@ void setup()
   setMotorSpeedRight(0);
   calibrateWhite(); // initialize the white values
   delay(2000);
+  for (int i = 0; i < PREV_LINES; i++) {
+    previousLinePositions[i] = 0;
+  }
   
   Serial.println("init completed");
   isInitialized = 1;
@@ -130,10 +133,11 @@ void loop()
   if (linePosition == -99) linePosition = previousLinePositions[PREV_LINES - 1];
   //Serial.println(linePosition);
 
-  float derivative = 0;
+  float previousLineAverage = 0;
   for (int i = 0; i < PREV_LINES; i++) {
-    derivative += previousLinePositions[i] / PREV_LINES;
+    previousLineAverage += previousLinePositions[i] / PREV_LINES;
   }
+  float derivative = linePosition - previousLineAverage;
   float integral = integralLinePosition;
   float proportional = linePosition;
 
@@ -149,10 +153,13 @@ void loop()
   setMotorSpeedRight(wheelSpdRight);
 
   // update PID values
+  previousLinePositions[PREV_LINES - 1] = linePosition;
   for (int i = 0; i < PREV_LINES - 1; i++) {
     previousLinePositions[i] = previousLinePositions[i + 1];
   }
-  previousLinePositions[PREV_LINES - 1] = linePosition;
+  Serial.println(derivative);
+
+  
   integralLinePosition += linePosition;
   delay(30);
 }
