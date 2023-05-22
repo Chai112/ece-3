@@ -12,10 +12,10 @@ const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
 // PID constants
-const float KP = 20;
-const float KD = 40;
-const float KI = 0;
-const float BASE_SPEED = 100;
+const int KP = 0;
+const int KD = 0;
+const int KI = 0;
+const int BASE_SPEED = 100;
 
 void setup()
 {
@@ -38,13 +38,13 @@ void setup()
 void loop()
 {
   ECE3_read_IR(sensorValues);
-  int pos = ( (sensorValues[0] - 500) * (1000 / 1210) * -8 +
-              (sensorValues[1] - 500) * (1000 / 1234) * -8 +
-              (sensorValues[2] - 500) * (1000 / 1021) * -8 +
-              (sensorValues[3] - 500) * (1000 / 757) * -8 +
-              (sensorValues[4] - 500) * (1000 / 711) * -8 +
-              (sensorValues[5] - 500) * (1000 / 806) * -8 +
-              (sensorValues[6] - 500) * (1000 / 759) * -8 +
-              (sensorValues[7] - 500) * (1000 / 951) * -8 ) * 0.0035
+  int pos = ( (sensorValues[0] * -8) +
+              (sensorValues[1] * -4) +
+              (sensorValues[2] * -2) +
+              (sensorValues[3] * -1) +
+              (sensorValues[4] * 1) +
+              (sensorValues[5] * 2) +
+              (sensorValues[6] * 4) +
+              (sensorValues[7] * 8) ) * 0.0035;
   Serial.println(pos);
 }

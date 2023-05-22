@@ -12,11 +12,11 @@ const int right_dir_pin  = 30;
 const int right_pwm_pin  = 39;
 
 // PID constants
-const float kP = 0;
+const float kP = 40;
 const float kI = 0;
-const float kD = 50;
+const float kD = 100;
 const float SPEED = 100;
-const float TURN_COEFF = 30;
+const float TURN_COEFF = 50;
 
 // PID variables
 const int PREV_LINES = 5;
@@ -116,6 +116,7 @@ void setup()
 
 float wheelSpdLeft;
 float wheelSpdRight;
+float slowDown = 0;
 
 float clamp(float d, float min, float max) {
   const float t = d < min ? min : d;
@@ -144,11 +145,15 @@ void loop()
   // implement PID controller
   float output = kP * proportional + kI * integral + kD * derivative;
 
-  float targetWheelSpdLeft = SPEED - output - TURN_COEFF*abs(linePosition);
-  float targetWheelSpdRight = SPEED + output - TURN_COEFF*abs(linePosition);
+  float targetSlowDown = TURN_COEFF*abs(linePosition);
+  slowDown += clamp(targetSlowDown - slowDown, -10, 10);
+  
+  float targetWheelSpdLeft = SPEED - output - slowDown;
+  float targetWheelSpdRight = SPEED + output - slowDown;
+  
 
-  wheelSpdLeft += clamp(targetWheelSpdLeft - wheelSpdLeft, -20, 20);
-  wheelSpdRight += clamp(targetWheelSpdRight - wheelSpdRight, -20, 20);
+  wheelSpdLeft += clamp(targetWheelSpdLeft - wheelSpdLeft, -50, 50);
+  wheelSpdRight += clamp(targetWheelSpdRight - wheelSpdRight, -50, 50);
   setMotorSpeedLeft(wheelSpdLeft);
   setMotorSpeedRight(wheelSpdRight);
 
