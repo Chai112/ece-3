@@ -17,6 +17,33 @@ const int KD = 0;
 const int KI = 0;
 const int BASE_SPEED = 100;
 
+void ChangeBaseSpeeds(int initialLeftSpd,int finalLeftSpd,int initialRightSpd,int finalRightSpd) {
+  /*
+  * This function changes the car speed gradually (in about 30 ms) from initial
+  * speed to final speed. This non-instantaneous speed change reduces the load
+  * on the plastic geartrain, and reduces the failure rate of the motors.
+  */
+  int diffLeft = finalLeftSpd-initialLeftSpd;
+  int diffRight = finalRightSpd-initialRightSpd;
+  int stepIncrement = 20;
+  int numStepsLeft = abs(diffLeft)/stepIncrement;
+  int numStepsRight = abs(diffRight)/stepIncrement;
+  int numSteps = max(numStepsLeft,numStepsRight);
+  int pwmLeftVal = initialLeftSpd; // initialize left wheel speed
+  int pwmRightVal = initialRightSpd; // initialize right wheel speed
+  int deltaLeft = (diffLeft)/numSteps; // left in(de)crement
+  int deltaRight = (diffRight)/numSteps; // right in(de)crement
+  for(int k=0;k<numSteps;k++) {
+    pwmLeftVal = pwmLeftVal + deltaLeft;
+    pwmRightVal = pwmRightVal + deltaRight;
+    analogWrite(left_pwm_pin,pwmLeftVal);
+    analogWrite(right_pwm_pin,pwmRightVal);
+    delay(30);
+  } // end for int k
+  analogWrite(left_pwm_pin,finalLeftSpd);
+  analogWrite(right_pwm_pin,finalRightSpd);
+} // end void ChangeWheelSpeeds
+
 void setup()
 {
   ECE3_Init();
@@ -33,18 +60,20 @@ void setup()
   digitalWrite(RIGHT_NSLP_PIN,HIGH);
   
   delay(1000);
-}
 
-void loop()
-{
-  ECE3_read_IR(sensorValues);
-  int pos = ( (sensorValues[0] * -8) +
-              (sensorValues[1] * -4) +
-              (sensorValues[2] * -2) +
-              (sensorValues[3] * -1) +
-              (sensorValues[4] * 1) +
-              (sensorValues[5] * 2) +
-              (sensorValues[6] * 4) +
-              (sensorValues[7] * 8) ) * 0.0035;
-  Serial.println(pos);
+  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
+
+  do {
+    
+    ECE3_read_IR(sensorValues);
+    int pos = ( (sensorValues[0] * -8) +
+                (sensorValues[1] * -4) +
+                (sensorValues[2] * -2) +
+                (sensorValues[3] * -1) +
+                (sensorValues[4] * 1) +
+                (sensorValues[5] * 2) +
+                (sensorValues[6] * 4) +
+                (sensorValues[7] * 8) ) * 0.0035;
+  
+  } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < ___);
 }
