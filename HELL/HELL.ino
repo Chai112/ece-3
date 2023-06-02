@@ -92,7 +92,6 @@ void setup() {
 
     Ei = 0;
 
-
   if (Ep < TURN) {
     if (pos > 0) {
       analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);

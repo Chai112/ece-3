@@ -8,6 +8,8 @@ void setup()
   Serial.begin(9600); // set the data rate in bits per second for serial data transmission
 
   delay(1000);
+
+  Serial.println("on");
 }
 
 void loop()
