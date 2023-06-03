@@ -59,14 +59,14 @@ void setup() {
       sensorValues[i] = sensorValues[i] * 1000 / maximum;
     }
     
-    pos = ( (sensorValues[0] * -8) +
-            (sensorValues[1] * -4) +
+    pos = ( (sensorValues[0] * -4) +
+            (sensorValues[1] * -3) +
             (sensorValues[2] * -2) +
             (sensorValues[3] * -1) +
             (sensorValues[4] *  1) +
             (sensorValues[5] *  2) +
-            (sensorValues[6] *  4) +
-            (sensorValues[7] *  8) ) * 0.01;
+            (sensorValues[6] *  3) +
+            (sensorValues[7] *  4) ) * 0.01;
     Ep = abs(pos);
     
     Ed = Ep - prevEp;
