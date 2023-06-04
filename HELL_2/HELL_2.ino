@@ -3,6 +3,7 @@
 uint16_t sensorValues[8];
 
 // CONSTANTS
+const int YELLOW_LED = 78;
 const int LEFT_NSLP_PIN = 31;
 const int LEFT_DIR_PIN  = 29;
 const int LEFT_PWM_PIN  = 40;
@@ -11,12 +12,17 @@ const int RIGHT_NSLP_PIN = 11;
 const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
-const int BASE_SPEED = 100;
-const int END = 15000;
+const int BASE_SPEED = 150;
+const int BOOST_SPEED = 50;
+const int END = 5000;
 
-const int Kp = 2;
-const int Kd = 2;
+const int STAGE_TWO = 360*3;
+
+const int Kp = 3;
+const int Kd = 10;
 const int Ki = 0;
+
+const int OFFSET = 40;
 
 // VARIABLES
 
@@ -34,6 +40,7 @@ void setup() {
   ECE3_Init();
   Serial.begin(9600); // set the data rate in bits per second for serial data transmission
 
+  pinMode(YELLOW_LED,OUTPUT);
   pinMode(LEFT_NSLP_PIN,OUTPUT);
   pinMode(LEFT_DIR_PIN,OUTPUT);
   pinMode(LEFT_PWM_PIN,OUTPUT);
@@ -41,12 +48,18 @@ void setup() {
   pinMode(RIGHT_DIR_PIN,OUTPUT);
   pinMode(RIGHT_PWM_PIN,OUTPUT);
 
+  
   digitalWrite(LEFT_NSLP_PIN,HIGH);
   digitalWrite(RIGHT_NSLP_PIN,HIGH);
+  digitalWrite(LEFT_DIR_PIN,LOW);
+  digitalWrite(RIGHT_DIR_PIN,LOW);
+  
   
   delay(1000);
   ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 
+  resetEncoderCount_left();
+  resetEncoderCount_right();
   do {
 
     ECE3_read_IR(sensorValues);
@@ -74,19 +87,53 @@ void setup() {
 
     Ei = 0;
 
-    if (pos > 0) {
-      analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-      analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
+    int boostSpeed = 0;
+    if(((getEncoderCount_left() + getEncoderCount_right()) / 2) > STAGE_TWO) {
+      boostSpeed = BOOST_SPEED;
+    }
+
+    if (Ep < OFFSET) {
+      digitalWrite(YELLOW_LED,LOW);
+      if (pos > 0) {
+        analogWrite(LEFT_PWM_PIN, boostSpeed + BASE_SPEED - Kp * Ep - Kd * Ed);
+        analogWrite(RIGHT_PWM_PIN, boostSpeed + BASE_SPEED);
+      }
+      else {
+        analogWrite(LEFT_PWM_PIN, boostSpeed + BASE_SPEED);
+        analogWrite(RIGHT_PWM_PIN, boostSpeed + BASE_SPEED - Kp * Ep - Kd * Ed);
+      }
     }
     else {
-      analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-      analogWrite(RIGHT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
+      digitalWrite(YELLOW_LED,HIGH);
+      if (pos > 0) {
+        analogWrite(LEFT_PWM_PIN, 0);
+        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
+      }
+      else {
+        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
+        analogWrite(RIGHT_PWM_PIN, 0);
+      }
     }
   
   } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < END);
 
+  turnAround();
   ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
 
+}
+
+void turnAround() {
+  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
+  resetEncoderCount_left();
+  digitalWrite(LEFT_DIR_PIN,HIGH);
+  analogWrite(LEFT_PWM_PIN, 150);
+  analogWrite(RIGHT_PWM_PIN, 150);
+//  left
+  do {
+    // no-op
+  } while (getEncoderCount_left() < 390);
+  digitalWrite(LEFT_DIR_PIN,LOW);
+  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 }
 
 void loop() {
