@@ -100,60 +100,6 @@ void setup() {
   } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < END);
 
   ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
-  turnAround();
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
-  
-  do {
-
-    ECE3_read_IR(sensorValues);
-    minimum = min(sensorValues[0], min(sensorValues[1], min(sensorValues[2], min(sensorValues[3], min(sensorValues[4], min(sensorValues[5], min(sensorValues[6], sensorValues[7])))))));
-    for (int i = 0; i < 8; i++) {
-      sensorValues[i] = sensorValues[i] - minimum;
-    }
-    maximum = max(sensorValues[0], max(sensorValues[1], max(sensorValues[2], max(sensorValues[3], max(sensorValues[4], max(sensorValues[5], max(sensorValues[6], sensorValues[7])))))));
-    for (int i = 0; i < 8; i++) {
-      sensorValues[i] = sensorValues[i] * 1000 / maximum;
-    }
-    
-    pos = ( (sensorValues[0] * -4) +
-            (sensorValues[1] * -3) +
-            (sensorValues[2] * -2) +
-            (sensorValues[3] * -1) +
-            (sensorValues[4] *  1) +
-            (sensorValues[5] *  2) +
-            (sensorValues[6] *  3) +
-            (sensorValues[7] *  4) ) * 0.01;
-    Ep = abs(pos);
-    
-    Ed = Ep - prevEp;
-    prevEp = Ep;
-
-    Ei = 0;
-
-    if (Ep < OFFSET) {
-      if (pos > 0) {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
-      }
-      else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-      }
-    }
-    else {
-      if (pos > 0) {
-        analogWrite(LEFT_PWM_PIN, 0);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
-      }
-      else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-        analogWrite(RIGHT_PWM_PIN, 0);
-      }
-    }
-  
-  } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < END);
-
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
 
 }
 
@@ -187,17 +133,3 @@ void ChangeBaseSpeeds(int initialLeftSpd, int finalLeftSpd, int initialRightSpd,
   analogWrite(LEFT_PWM_PIN,finalLeftSpd);
   analogWrite(RIGHT_PWM_PIN,finalRightSpd);
 } // end void ChangeWheelSpeeds
-
-void turnAround() {
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
-  resetEncoderCount_left();
-  digitalWrite(LEFT_DIR_PIN,HIGH);
-  analogWrite(LEFT_PWM_PIN, 150);
-  analogWrite(RIGHT_PWM_PIN, 150);
-//  left
-  do {
-    // no-op
-  } while (getEncoderCount_left() < 390);
-  digitalWrite(LEFT_DIR_PIN,LOW);
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
-}
