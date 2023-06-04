@@ -12,6 +12,7 @@ const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
 const int BASE_SPEED = 100;
+const int BOOST_SPEED = 50;
 const int END = 5000;
 
 const int Kp = 2;
@@ -19,6 +20,9 @@ const int Kd = 2;
 const int Ki = 0;
 
 const int OFFSET = 25;
+
+const int STAGE_2 = 5*360;
+const int STAGE_3 = 9.5*360;
 
 // VARIABLES
 
@@ -49,6 +53,8 @@ void setup() {
   delay(1000);
   ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 
+  resetEncoderCount_left();
+  resetEncoderCount_right();
   do {
 
     ECE3_read_IR(sensorValues);
@@ -76,23 +82,33 @@ void setup() {
 
     Ei = 0;
 
+    int spd;
+    int encoderCount = (getEncoderCount_left() + getEncoderCount_right()) / 2;
+    if (encoderCount > STAGE_3) {
+      spd = BASE_SPEED;
+    } else if (encoderCount > STAGE_2) {
+      spd = BASE_SPEED + BOOST_SPEED;
+    } else {
+      spd = BASE_SPEED;
+    }
+
     if (Ep < OFFSET) {
       if (pos > 0) {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
+        analogWrite(LEFT_PWM_PIN, spd - Kp * Ep - Kd * Ed);
+        analogWrite(RIGHT_PWM_PIN, spd);
       }
       else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
+        analogWrite(LEFT_PWM_PIN, spd);
+        analogWrite(RIGHT_PWM_PIN, spd - Kp * Ep - Kd * Ed);
       }
     }
     else {
       if (pos > 0) {
         analogWrite(LEFT_PWM_PIN, 0);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
+        analogWrite(RIGHT_PWM_PIN, spd);
       }
       else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
+        analogWrite(LEFT_PWM_PIN, spd);
         analogWrite(RIGHT_PWM_PIN, 0);
       }
     }
