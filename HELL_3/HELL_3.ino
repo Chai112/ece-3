@@ -18,7 +18,7 @@ const int Kp = 2;
 const int Kd = 2;
 const int Ki = 0;
 
-const int OFFSET = 25;
+const int OFFSET = 40;
 
 // VARIABLES
 
@@ -197,7 +197,7 @@ void turnAround() {
 //  left
   do {
     // no-op
-  } while (getEncoderCount_left() < 390);
+  } while (getEncoderCount_left() < 360);
   digitalWrite(LEFT_DIR_PIN,LOW);
   ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 }
