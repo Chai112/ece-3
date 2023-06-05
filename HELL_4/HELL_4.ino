@@ -12,55 +12,57 @@ const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
 const int STAGE_1 = 0;
-const int STAGE_1_SPD = 100;
+const int STAGE_1_SPD = 90;
 const int STAGE_1_KP = 2;
 const int STAGE_1_KD = 5;
 const int STAGE_1_KI = 0;
 
 const int STAGE_2 = 5.5*360;
-const int STAGE_2_SPD = 150;
+const int STAGE_2_SPD = 140;
 const int STAGE_2_KP = 3;
-const int STAGE_2_KD = 10;
+const int STAGE_2_KD = 20;
 const int STAGE_2_KI = 0;
 
-const int STAGE_3 = 9.5*360;
+const int STAGE_3 = 9*360;
 const int STAGE_3_SPD = 50;
 const int STAGE_3_KP = 2;
 const int STAGE_3_KD = 2;
 const int STAGE_3_KI = 0;
 
 const int STAGE_4 = 11.5*360;
-const int STAGE_4_SPD = 150;
+const int STAGE_4_SPD = 140;
 const int STAGE_4_KP = 3;
-const int STAGE_4_KD = 10;
+const int STAGE_4_KD = 12;
 const int STAGE_4_KI = 0;
 
 const int STAGE_5 = 0;          // TURNAROUND
-const int STAGE_5_SPD = 100;
+const int STAGE_5_SPD = 90;
 const int STAGE_5_KP = 2;
 const int STAGE_5_KD = 5;
 const int STAGE_5_KI = 0;
 
-const int STAGE_6 = 14.5*360;
+const int STAGE_6 = 1.5*360;
 const int STAGE_6_SPD = 50;
 const int STAGE_6_KP = 2;
-const int STAGE_6_KD = 2;
+const int STAGE_6_KD = 5;
 const int STAGE_6_KI = 0;
 
-const int STAGE_7 = 17*360;
-const int STAGE_7_SPD = 150;
+const int STAGE_7 = 3.5*360;
+const int STAGE_7_SPD = 140;
 const int STAGE_7_KP = 3;
-const int STAGE_7_KD = 10;
+const int STAGE_7_KD = 12;
 const int STAGE_7_KI = 0;
 
-const int STAGE_8 = 21*360;
-const int STAGE_8_SPD = 100;
+const int STAGE_8 = 7.5*360;
+const int STAGE_8_SPD = 85;
 const int STAGE_8_KP = 2;
 const int STAGE_8_KD = 5;
 const int STAGE_8_KI = 0;
 
+const int STAGE_END = 13*360;
+
 const int OFFSET = 40;
-const int END = 5000;
+const int END = 6000;
 
 // VARIABLES
 
@@ -220,7 +222,10 @@ void setup() {
     Ei = 0;
     
     int encoderCount = (getEncoderCount_left() + getEncoderCount_right()) / 2;
-    if (encoderCount > STAGE_8) {
+    if (encoderCount > STAGE_END) {
+      spd = 0;
+      
+    } else if (encoderCount > STAGE_8) {
       spd = STAGE_8_SPD;
       Kp = STAGE_8_KP;
       Kd = STAGE_8_KD;
@@ -241,6 +246,7 @@ void setup() {
       Kd = STAGE_5_KD;
       Ki = STAGE_5_KI;
     }
+    
 
     if (Ep < OFFSET) {
       if (pos > 0) {
@@ -276,7 +282,7 @@ void turnAround() {
 //  left
   do {
     // no-op
-  } while (getEncoderCount_left() < 350);
+  } while (getEncoderCount_left() < 320);
 
   
   digitalWrite(LEFT_DIR_PIN,LOW);

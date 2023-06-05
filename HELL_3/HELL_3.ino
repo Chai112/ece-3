@@ -14,11 +14,11 @@ const int RIGHT_PWM_PIN  = 39;
 
 const int END = 5000;
 
-const int STAGE_1 = 5.5 * 360;
+const int STAGE_1 = 6 * 360;
 const int SPEED_1 = 150;
-const int OFFSET_1 = 30;;
+const int OFFSET_1 = 30;
 const int KP_1 = 3;
-const int KD_1 = 10;
+const int KD_1 = 5;
 
 const int STAGE_2 = 9.5*360;
 const int SPEED_2 = 250;
