@@ -11,59 +11,64 @@ const int RIGHT_NSLP_PIN = 11;
 const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
-const int END = 5000;
-
-/*
-const int Kp = 2;
-const int Kd = 2;
-const int Ki = 0;
-*/
-
 const int STAGE_1 = 0;
 const int STAGE_1_SPD = 100;
 const int STAGE_1_KP = 2;
 const int STAGE_1_KD = 5;
 const int STAGE_1_KI = 0;
 
-const int STAGE_2 = 5*360;
-const int STAGE_2_SPD = 250;
-const int STAGE_2_KP = 5;
-const int STAGE_2_KD = 50;
+const int STAGE_2 = 5.5*360;
+const int STAGE_2_SPD = 150;
+const int STAGE_2_KP = 3;
+const int STAGE_2_KD = 10;
 const int STAGE_2_KI = 0;
 
-const int STAGE_3 = 9*360;
+const int STAGE_3 = 9.5*360;
 const int STAGE_3_SPD = 50;
-const int STAGE_3_KP = 1;
+const int STAGE_3_KP = 2;
 const int STAGE_3_KD = 2;
 const int STAGE_3_KI = 0;
 
-
-const int STAGE_4 = 11*360;
-const int STAGE_4_SPD = 250;
-const int STAGE_4_KP = 5;
-const int STAGE_4_KD = 50;
+const int STAGE_4 = 11.5*360;
+const int STAGE_4_SPD = 150;
+const int STAGE_4_KP = 3;
+const int STAGE_4_KD = 10;
 const int STAGE_4_KI = 0;
 
-const int STAGE_5_KP = 5;
-const int STAGE_5_KD = 50;
+const int STAGE_5 = 0;          // TURNAROUND
+const int STAGE_5_SPD = 100;
+const int STAGE_5_KP = 2;
+const int STAGE_5_KD = 5;
 const int STAGE_5_KI = 0;
 
-const int STAGE_6_KP = 5;
-const int STAGE_6_KD = 50;
+const int STAGE_6 = 14.5*360;
+const int STAGE_6_SPD = 50;
+const int STAGE_6_KP = 2;
+const int STAGE_6_KD = 2;
 const int STAGE_6_KI = 0;
 
-const int STAGE_7_KP = 5;
-const int STAGE_7_KD = 50;
+const int STAGE_7 = 17*360;
+const int STAGE_7_SPD = 150;
+const int STAGE_7_KP = 3;
+const int STAGE_7_KD = 10;
 const int STAGE_7_KI = 0;
 
-const int STAGE_8_KP = 5;
-const int STAGE_8_KD = 50;
+const int STAGE_8 = 21*360;
+const int STAGE_8_SPD = 100;
+const int STAGE_8_KP = 2;
+const int STAGE_8_KD = 5;
 const int STAGE_8_KI = 0;
 
 const int OFFSET = 40;
-
+const int END = 5000;
 
 // VARIABLES
+
+int spd;
+
+int Kp = 0;
+int Kd = 0;
+int Ki = 0;
 
 int Ep = 0;
 int Ed = 0;
@@ -73,6 +78,8 @@ int minimum;
 int maximum;
 int pos = 0;
 int prevEp = 0;
+
+int stage = 0;
 
 void setup() {  
 
@@ -93,10 +100,11 @@ void setup() {
   digitalWrite(RIGHT_DIR_PIN,LOW);
   
   delay(1000);
+  
   ChangeBaseSpeeds(0, STAGE_1_SPD, 0, STAGE_1_SPD);
-
   resetEncoderCount_left();
   resetEncoderCount_right();
+  
   do {
 
     ECE3_read_IR(sensorValues);
@@ -123,11 +131,6 @@ void setup() {
     prevEp = Ep;
 
     Ei = 0;
-
-    int spd;
-    int Kp;
-    int Kd;
-    int Ki;
     
     int encoderCount = (getEncoderCount_left() + getEncoderCount_right()) / 2;
     if (encoderCount > STAGE_4) {
@@ -140,11 +143,16 @@ void setup() {
       Kp = STAGE_3_KP;
       Kd = STAGE_3_KD;
       Ki = STAGE_3_KI;
+      if (stage == 2) {
+        ChangeBaseSpeeds(STAGE_2_SPD, STAGE_3_SPD, STAGE_2_SPD, STAGE_3_SPD);
+        stage = 3;
+      }
     } else if (encoderCount > STAGE_2) {
       spd = STAGE_2_SPD;
       Kp = STAGE_2_KP;
       Kd = STAGE_2_KD;
       Ki = STAGE_2_KI;
+      stage = 2;
     } else if (encoderCount > STAGE_1) {
       spd = STAGE_1_SPD;
       Kp = STAGE_1_KP;
@@ -177,7 +185,10 @@ void setup() {
 
   ChangeBaseSpeeds(STAGE_4_SPD, 0, STAGE_4_SPD, 0);
   turnAround();
-  ChangeBaseSpeeds(0, STAGE_4_SPD, 0, STAGE_4_SPD);
+  ChangeBaseSpeeds(0, STAGE_5_SPD, 0, STAGE_5_SPD);
+  do {
+    // no-op
+  } while (getEncoderCount_left() < 500);
 
   resetEncoderCount_left();
   resetEncoderCount_right();
@@ -207,33 +218,28 @@ void setup() {
     prevEp = Ep;
 
     Ei = 0;
-
-    int spd;
-    int Kp;
-    int Kd;
-    int Ki;
     
     int encoderCount = (getEncoderCount_left() + getEncoderCount_right()) / 2;
-    if (encoderCount > STAGE_4) {
-      spd = STAGE_4_SPD;
-      Kp = STAGE_4_KP;
-      Kd = STAGE_4_KD;
-      Ki = STAGE_4_KI;
-    } else if (encoderCount > STAGE_3) {
-      spd = STAGE_3_SPD;
-      Kp = STAGE_3_KP;
-      Kd = STAGE_3_KD;
-      Ki = STAGE_3_KI;
-    } else if (encoderCount > STAGE_2) {
-      spd = STAGE_2_SPD;
-      Kp = STAGE_2_KP;
-      Kd = STAGE_2_KD;
-      Ki = STAGE_2_KI;
-    } else if (encoderCount > STAGE_1) {
-      spd = STAGE_1_SPD;
-      Kp = STAGE_1_KP;
-      Kd = STAGE_1_KD;
-      Ki = STAGE_1_KI;
+    if (encoderCount > STAGE_8) {
+      spd = STAGE_8_SPD;
+      Kp = STAGE_8_KP;
+      Kd = STAGE_8_KD;
+      Ki = STAGE_8_KI;
+    } else if (encoderCount > STAGE_7) {
+      spd = STAGE_7_SPD;
+      Kp = STAGE_7_KP;
+      Kd = STAGE_7_KD;
+      Ki = STAGE_7_KI;
+    } else if (encoderCount > STAGE_6) {
+      spd = STAGE_6_SPD;
+      Kp = STAGE_6_KP;
+      Kd = STAGE_6_KD;
+      Ki = STAGE_6_KI;
+    } else if (encoderCount > STAGE_5) {
+      spd = STAGE_5_SPD;
+      Kp = STAGE_5_KP;
+      Kd = STAGE_5_KD;
+      Ki = STAGE_5_KI;
     }
 
     if (Ep < OFFSET) {
@@ -262,7 +268,7 @@ void setup() {
 }
 
 void turnAround() {
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
+  //ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
   resetEncoderCount_left();
   digitalWrite(LEFT_DIR_PIN,HIGH);
   analogWrite(LEFT_PWM_PIN, 150);
@@ -270,9 +276,11 @@ void turnAround() {
 //  left
   do {
     // no-op
-  } while (getEncoderCount_left() < 360);
+  } while (getEncoderCount_left() < 350);
+
+  
   digitalWrite(LEFT_DIR_PIN,LOW);
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
+  //ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 }
 
 void loop() {
