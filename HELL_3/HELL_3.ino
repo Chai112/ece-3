@@ -11,28 +11,75 @@ const int RIGHT_NSLP_PIN = 11;
 const int RIGHT_DIR_PIN  = 30;
 const int RIGHT_PWM_PIN  = 39;
 
-const int BASE_SPEED = 100;
 const int END = 5000;
 
-const int Kp = 2;
-const int Kd = 5;
-const int Ki = 0;
+const int STAGE_1;
+const int SPEED_1;
+const int OFFSET_1;
+const int KP_1;
+const int KD_1;
 
-const int OFFSET = 40;
+const int STAGE_2;
+const int SPEED_2;
+const int OFFSET_2;
+const int KP_2;
+const int KD_2;
+
+const int STAGE_3;
+const int SPEED_3;
+const int OFFSET_3;
+const int KP_3;
+const int KD_3;
+
+const int STAGE_4;
+const int SPEED_4;
+const int OFFSET_4;
+const int KP_4;
+const int KD_4;
+
+const int STAGE_5;
+const int SPEED_5;
+const int OFFSET_5;
+const int KP_5;
+const int KD_5;
+
+const int STAGE_6;
+const int SPEED_6;
+const int OFFSET_6;
+const int KP_6;
+const int KD_6;
+
+const int STAGE_7;
+const int SPEED_7;
+const int OFFSET_7;
+const int KP_7;
+const int KD_7;
+
+const int STAGE_8;
+const int SPEED_8;
+const int OFFSET_8;
+const int KP_8;
+const int KD_8;
 
 // VARIABLES
 
-int Ep = 0;
-int Ed = 0;
-int Ei = 0;
+int baseSpeed;
+int offset;
+int distanceTraveled;
+
+int Kp;
+int Kd;
+
+int Ep;
+int Ed;
 
 int minimum;
 int maximum;
-int pos = 0;
+int pos;
 int prevEp = 0;
 
-void setup() {  
-
+void setup() 
+{  
   ECE3_Init();
   Serial.begin(9600); // set the data rate in bits per second for serial data transmission
 
@@ -45,12 +92,21 @@ void setup() {
 
   digitalWrite(LEFT_NSLP_PIN,HIGH);
   digitalWrite(RIGHT_NSLP_PIN,HIGH);
+  digitalWrite(LEFT_DIR_PIN,LOW);
+  digitalWrite(RIGHT_DIR_PIN,LOW);
   
+  resetEncoderCount_left();
+  resetEncoderCount_right();
   delay(1000);
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 
-  do {
-
+  baseSpeed = SPEED_1;
+  offset = OFFSET_1;
+  Kp = KP_1;
+  Kd = KD_1;
+  
+  ChangeBaseSpeeds(0, baseSpeed, 0, baseSpeed);
+  do 
+  {
     ECE3_read_IR(sensorValues);
     minimum = min(sensorValues[0], min(sensorValues[1], min(sensorValues[2], min(sensorValues[3], min(sensorValues[4], min(sensorValues[5], min(sensorValues[6], sensorValues[7])))))));
     for (int i = 0; i < 8; i++) {
@@ -60,7 +116,6 @@ void setup() {
     for (int i = 0; i < 8; i++) {
       sensorValues[i] = sensorValues[i] * 1000 / maximum;
     }
-    
     pos = ( (sensorValues[0] * -4) +
             (sensorValues[1] * -3) +
             (sensorValues[2] * -2) +
@@ -70,13 +125,9 @@ void setup() {
             (sensorValues[6] *  3) +
             (sensorValues[7] *  4) ) * 0.01;
     Ep = abs(pos);
-    
     Ed = Ep - prevEp;
     prevEp = Ep;
-
-    Ei = 0;
-
-    if (Ep < OFFSET) {
+    if (Ep < offset) {
       if (pos > 0) {
         analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
         analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
@@ -96,65 +147,9 @@ void setup() {
         analogWrite(RIGHT_PWM_PIN, 0);
       }
     }
+  } while (distanceTraveled < STAGE_1);
+
   
-  } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < END);
-
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
-  turnAround();
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
-  
-  do {
-
-    ECE3_read_IR(sensorValues);
-    minimum = min(sensorValues[0], min(sensorValues[1], min(sensorValues[2], min(sensorValues[3], min(sensorValues[4], min(sensorValues[5], min(sensorValues[6], sensorValues[7])))))));
-    for (int i = 0; i < 8; i++) {
-      sensorValues[i] = sensorValues[i] - minimum;
-    }
-    maximum = max(sensorValues[0], max(sensorValues[1], max(sensorValues[2], max(sensorValues[3], max(sensorValues[4], max(sensorValues[5], max(sensorValues[6], sensorValues[7])))))));
-    for (int i = 0; i < 8; i++) {
-      sensorValues[i] = sensorValues[i] * 1000 / maximum;
-    }
-    
-    pos = ( (sensorValues[0] * -4) +
-            (sensorValues[1] * -3) +
-            (sensorValues[2] * -2) +
-            (sensorValues[3] * -1) +
-            (sensorValues[4] *  1) +
-            (sensorValues[5] *  2) +
-            (sensorValues[6] *  3) +
-            (sensorValues[7] *  4) ) * 0.01;
-    Ep = abs(pos);
-    
-    Ed = Ep - prevEp;
-    prevEp = Ep;
-
-    Ei = 0;
-
-    if (Ep < OFFSET) {
-      if (pos > 0) {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
-      }
-      else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED - Kp * Ep - Kd * Ed);
-      }
-    }
-    else {
-      if (pos > 0) {
-        analogWrite(LEFT_PWM_PIN, 0);
-        analogWrite(RIGHT_PWM_PIN, BASE_SPEED);
-      }
-      else {
-        analogWrite(LEFT_PWM_PIN, BASE_SPEED);
-        analogWrite(RIGHT_PWM_PIN, 0);
-      }
-    }
-  
-  } while (sensorValues[0] + sensorValues[1] + sensorValues[2] + sensorValues[3] + sensorValues[4] + sensorValues[5] + sensorValues[6] + sensorValues[7] < END);
-
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
-
 }
 
 void loop() {
