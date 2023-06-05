@@ -15,7 +15,7 @@ const int BASE_SPEED = 100;
 const int END = 5000;
 
 const int Kp = 2;
-const int Kd = 2;
+const int Kd = 5;
 const int Ki = 0;
 
 const int OFFSET = 40;
@@ -189,7 +189,6 @@ void ChangeBaseSpeeds(int initialLeftSpd, int finalLeftSpd, int initialRightSpd,
 } // end void ChangeWheelSpeeds
 
 void turnAround() {
-  ChangeBaseSpeeds(BASE_SPEED, 0, BASE_SPEED, 0);
   resetEncoderCount_left();
   digitalWrite(LEFT_DIR_PIN,HIGH);
   analogWrite(LEFT_PWM_PIN, 150);
@@ -199,5 +198,4 @@ void turnAround() {
     // no-op
   } while (getEncoderCount_left() < 360);
   digitalWrite(LEFT_DIR_PIN,LOW);
-  ChangeBaseSpeeds(0, BASE_SPEED, 0, BASE_SPEED);
 }
